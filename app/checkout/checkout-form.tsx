@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 
-const PRICE = 4299;
+const PRICE = 799;
 
 export default function CheckoutForm() {
   const router = useRouter();

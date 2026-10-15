@@ -9,7 +9,7 @@ Next.js + Tailwind CSS landing page and Cash on Delivery checkout for the Cordle
 3. Copy `.env.example` to `.env.local` and fill in the private values below.
 4. Run `npm run dev`, then open `http://localhost:3000`.
 
-The product price and delivery fees are defined in `app/api/order/route.ts` and `app/checkout/checkout-form.tsx`: offer price NPR 4,299, delivery NPR 150 inside Kathmandu Valley and NPR 250 outside. Update both if pricing changes.
+The marked price is NPR 999 and the selling price is NPR 799. The server-side order amount is calculated in `app/api/order/route.ts`, and the checkout display uses `app/checkout/checkout-form.tsx`. Delivery is NPR 150 inside Kathmandu Valley and NPR 250 outside.
 
 ## Google Sheets setup
 

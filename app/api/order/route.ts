@@ -98,11 +98,11 @@ export async function POST(request: Request) {
   if (order.name.length < 2 || !/^\+?[0-9 ()-]{7,20}$/.test(order.phone) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(order.email) || !order.district || !order.city || order.address.length < 5 || !order.zone || !Number.isInteger(order.quantity) || order.quantity < 1 || order.quantity > 5) {
     return NextResponse.json({ error: "Please provide a valid name, phone, email, delivery address, area, and quantity." }, { status: 400 });
   }
-  const subtotal = order.quantity * 4299;
+  const subtotal = order.quantity * 799;
   const delivery = order.zone === "inside" ? 150 : 250;
   const total = subtotal + delivery;
   const createdAt = new Date().toISOString();
-  const row = [createdAt, order.orderId, order.name, order.phone, order.email, order.district, order.city, order.address, order.note, order.zone === "inside" ? "Kathmandu Valley" : "Outside Valley", order.quantity, 4299, subtotal, delivery, total, "COD", "Received"];
+  const row = [createdAt, order.orderId, order.name, order.phone, order.email, order.district, order.city, order.address, order.note, order.zone === "inside" ? "Kathmandu Valley" : "Outside Valley", order.quantity, 799, subtotal, delivery, total, "COD", "Received"];
 
   try {
     getConfig();
