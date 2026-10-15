@@ -29,10 +29,10 @@ async function saveToSheet(row: (string | number)[]) {
   const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID!;
   const range = `'${tab.replace(/'/g, "''")}'!A:Q`;
   const headings = ["Created At", "Order ID", "Customer Name", "Phone", "Email", "District", "City / Municipality", "Street Address", "Delivery Note", "Delivery Zone", "Quantity", "Unit Price (NPR)", "Subtotal (NPR)", "Delivery Fee (NPR)", "Total (NPR)", "Payment Method", "Order Status"];
-  let spreadsheet = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets(properties(sheetId,title),bandedRanges)" });
+  let spreadsheet = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets(properties(sheetId,title))" });
   if (!spreadsheet.data.sheets?.some((sheet) => sheet.properties?.title === tab)) {
     await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests: [{ addSheet: { properties: { title: tab } } }] } });
-    spreadsheet = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets(properties(sheetId,title),bandedRanges)" });
+    spreadsheet = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets(properties(sheetId,title))" });
   }
   const sheet = spreadsheet.data.sheets?.find((entry) => entry.properties?.title === tab);
   if (sheet?.properties?.sheetId === undefined) throw new Error(`Could not access the ${tab} sheet tab.`);
@@ -40,6 +40,14 @@ async function saveToSheet(row: (string | number)[]) {
   if (!existing.data.values?.length) {
     await sheets.spreadsheets.values.update({ spreadsheetId, range: `'${tab.replace(/'/g, "''")}'!A1:Q1`, valueInputOption: "RAW", requestBody: { values: [headings] } });
   }
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range,
+    valueInputOption: "RAW",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: { values: [row] },
+  });
+
   const sheetId = sheet.properties.sheetId;
   const requests: object[] = [
     { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 1, hideGridlines: true }, tabColor: { red: 0.322, green: 0.4, blue: 0.325 } }, fields: "gridProperties.frozenRowCount,gridProperties.hideGridlines,tabColor" } },
@@ -52,16 +60,11 @@ async function saveToSheet(row: (string | number)[]) {
   ];
   const widths = [165, 180, 175, 130, 230, 135, 210, 280, 240, 175, 90, 130, 130, 130, 145, 130, 120];
   widths.forEach((pixelSize, index) => requests.push({ updateDimensionProperties: { range: { sheetId, dimension: "COLUMNS", startIndex: index, endIndex: index + 1 }, properties: { pixelSize }, fields: "pixelSize" } }));
-  const hasOrderBanding = sheet.bandedRanges?.some((band) => band.range?.sheetId === sheetId && band.range.startColumnIndex === 0 && band.range.endColumnIndex === 17);
-  if (!hasOrderBanding) requests.push({ addBanding: { bandedRange: { range: { sheetId, startRowIndex: 0, startColumnIndex: 0, endColumnIndex: 17 }, rowProperties: { headerColor: { red: 0.322, green: 0.4, blue: 0.325 }, firstBandColor: { red: 1, green: 1, blue: 1 }, secondBandColor: { red: 0.96, green: 0.97, blue: 0.95 } } } } });
-  await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests } });
-  await sheets.spreadsheets.values.append({
-    spreadsheetId,
-    range,
-    valueInputOption: "RAW",
-    insertDataOption: "INSERT_ROWS",
-    requestBody: { values: [row] },
-  });
+  try {
+    await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests } });
+  } catch (error) {
+    console.error("Order saved, but spreadsheet formatting could not be updated", { orderId: row[1], error });
+  }
 }
 
 async function sendEmails(order: { orderId: string; name: string; phone: string; email: string; district: string; city: string; address: string; note: string; quantity: number; zone: string; subtotal: number; delivery: number; total: number }) {

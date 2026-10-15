@@ -16,10 +16,10 @@ const auth = new google.auth.JWT({
 const sheets = google.sheets({ version: "v4", auth });
 const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
 const tab = process.env.GOOGLE_SHEET_TAB || "Orders";
-let spreadsheet = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets(properties(sheetId,title),bandedRanges)" });
+let spreadsheet = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets(properties(sheetId,title))" });
 if (!spreadsheet.data.sheets?.some((sheet) => sheet.properties?.title === tab)) {
   await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests: [{ addSheet: { properties: { title: tab } } }] } });
-  spreadsheet = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets(properties(sheetId,title),bandedRanges)" });
+  spreadsheet = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets(properties(sheetId,title))" });
 }
 
 const sheet = spreadsheet.data.sheets?.find((entry) => entry.properties?.title === tab);
@@ -43,11 +43,13 @@ const requests = [
 ];
 const widths = [165, 180, 175, 130, 230, 135, 210, 280, 240, 175, 90, 130, 130, 130, 145, 130, 120];
 widths.forEach((pixelSize, index) => requests.push({ updateDimensionProperties: { range: { sheetId, dimension: "COLUMNS", startIndex: index, endIndex: index + 1 }, properties: { pixelSize }, fields: "pixelSize" } }));
-const hasOrderBanding = sheet.bandedRanges?.some((band) => band.range?.sheetId === sheetId && band.range.startColumnIndex === 0 && band.range.endColumnIndex === 17);
-if (!hasOrderBanding) {
-  requests.push({ addBanding: { bandedRange: { range: { sheetId, startRowIndex: 0, startColumnIndex: 0, endColumnIndex: 17 }, rowProperties: { headerColor: { red: 0.322, green: 0.4, blue: 0.325 }, firstBandColor: { red: 1, green: 1, blue: 1 }, secondBandColor: { red: 0.96, green: 0.97, blue: 0.95 } } } } });
-}
 await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests } });
+try {
+  await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests: [{ addBanding: { bandedRange: { range: { sheetId, startRowIndex: 0, startColumnIndex: 0, endColumnIndex: 17 }, rowProperties: { headerColor: { red: 0.322, green: 0.4, blue: 0.325 }, firstBandColor: { red: 1, green: 1, blue: 1 }, secondBandColor: { red: 0.96, green: 0.97, blue: 0.95 } } } } }] } });
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (!message.includes("already has alternating background colors")) throw error;
+}
 console.log(`Formatted spreadsheet tab "${tab}" with a frozen sage header, alternating rows, readable widths, wrapped addresses, and NPR currency columns.`);
 
 const port = Number(process.env.SMTP_PORT || 465);
