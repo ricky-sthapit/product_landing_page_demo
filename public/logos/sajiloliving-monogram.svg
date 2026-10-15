@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="148" viewBox="0 0 560 148" fill="none">
+  <path d="M69 17 119 46v52l-50 29-50-29V46l50-29Z" fill="#292D29"/>
+  <path d="M85 49c-5-5-12-8-21-8-12 0-20 6-20 15 0 10 9 13 24 16 14 3 22 7 22 18 0 11-10 18-24 18-10 0-19-4-26-11" stroke="#F2F0E7" stroke-width="6" stroke-linecap="round"/>
+  <path d="M69 46v57m-13-39h27" stroke="#91A18D" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="101" cy="43" r="6" fill="#D7A86F"/>
+  <text x="145" y="74" fill="#292D29" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="700" letter-spacing="-1.5">SajiloLiving</text>
+  <text x="147" y="101" fill="#526653" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600" letter-spacing="1.8">EVERYDAY LIVING, MADE EASIER.</text>
+  <text x="147" y="124" fill="#777D74" font-family="Arial, Helvetica, sans-serif" font-size="13">Smart finds for a better home.</text>
+</svg>
