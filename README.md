@@ -36,5 +36,5 @@ Spreadsheet columns: Created At, Order ID, Customer Name, Phone, Email, District
 
 - The five supplied product images are included in `public/images/` as PNGs.
 - The reels section is omitted because no reel links were provided.
-- The three review cards are clearly labeled illustrative samples. Replace them with verified customer feedback before presenting them as genuine testimonials.
+- Customer reviews are not displayed; add verified feedback when it is available.
 - Battery life, suction, container capacity, and warranty are not stated because model-specific values were not supplied. The accessory image is presented as pictured contents with a note to confirm the actual package.
