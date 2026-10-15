@@ -22,7 +22,7 @@ The order endpoint creates the configured tab if it does not exist, adds column 
 
 ## Gmail order emails
 
-For Gmail SMTP, use a Google App Password (with 2-Step Verification enabled) as `SMTP_PASS`; do not use your regular account password. Set `SMTP_USER`, `ORDER_FROM_EMAIL`, and `ORDER_NOTIFICATION_EMAIL`. The customer confirmation uses the submitted customer email as its recipient and `ORDER_FROM_EMAIL` as its reply-to. `SMTP_HOST`, `SMTP_PORT`, and `SMTP_SECURE` default to Gmail SMTP on port 465.
+For Gmail SMTP, use a Google App Password (with 2-Step Verification enabled) as `SMTP_PASS`; do not use your regular account password. Set `SMTP_USER` and `SMTP_PASS`. `ORDER_FROM_EMAIL` and `ORDER_NOTIFICATION_EMAIL` default to `SMTP_USER`, or can be set separately. The customer confirmation uses the submitted customer email as its recipient and the sender email as its reply-to. `SMTP_HOST`, `SMTP_PORT`, and `SMTP_SECURE` default to Gmail SMTP on port 465.
 
 Set `BRAND_NAME` to change the name in the customer email. Set `NEXT_PUBLIC_SITE_URL` for production email links if links are added later.
 

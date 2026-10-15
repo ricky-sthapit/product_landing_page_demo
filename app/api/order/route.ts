@@ -13,7 +13,7 @@ const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => (
 const clean = (value: unknown, limit = 300) => String(value ?? "").trim().slice(0, limit);
 
 function getConfig() {
-  const required = ["GOOGLE_SPREADSHEET_ID", "GOOGLE_SERVICE_ACCOUNT_EMAIL", "GOOGLE_PRIVATE_KEY", "SMTP_USER", "SMTP_PASS", "ORDER_NOTIFICATION_EMAIL", "ORDER_FROM_EMAIL"];
+  const required = ["GOOGLE_SPREADSHEET_ID", "GOOGLE_SERVICE_ACCOUNT_EMAIL", "GOOGLE_PRIVATE_KEY", "SMTP_USER", "SMTP_PASS"];
   const missing = required.filter((key) => !process.env[key]);
   if (missing.length) throw new Error(`Order system is not configured. Missing: ${missing.join(", ")}`);
 }
@@ -66,16 +66,19 @@ async function saveToSheet(row: (string | number)[]) {
 
 async function sendEmails(order: { orderId: string; name: string; phone: string; email: string; district: string; city: string; address: string; note: string; quantity: number; zone: string; subtotal: number; delivery: number; total: number }) {
   const port = Number(process.env.SMTP_PORT || 465);
-  const transporter = nodemailer.createTransport({ host: process.env.SMTP_HOST || "smtp.gmail.com", port, secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : port === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } });
+  const smtpUser = process.env.SMTP_USER!;
+  const fromEmail = process.env.ORDER_FROM_EMAIL || smtpUser;
+  const notificationEmail = process.env.ORDER_NOTIFICATION_EMAIL || smtpUser;
+  const transporter = nodemailer.createTransport({ host: process.env.SMTP_HOST || "smtp.gmail.com", port, secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : port === 465, auth: { user: smtpUser, pass: process.env.SMTP_PASS } });
   const brand = clean(process.env.BRAND_NAME || "SajiloLiving", 80);
-  const from = `"${brand}" <${process.env.ORDER_FROM_EMAIL}>`;
+  const from = `"${brand}" <${fromEmail}>`;
   const address = `${order.address}, ${order.city}, ${order.district}`;
   const safe = Object.fromEntries(Object.entries({ ...order, address, brand }).map(([key, value]) => [key, escapeHtml(String(value))]));
   const htmlDetails = `<p><strong>Order:</strong> ${safe.orderId}<br><strong>Product:</strong> Cordless Handheld Vacuum Cleaner × ${order.quantity}<br><strong>Subtotal:</strong> NPR ${order.subtotal.toLocaleString("en-IN")}<br><strong>Delivery:</strong> NPR ${order.delivery}<br><strong>Total due on delivery:</strong> NPR ${order.total.toLocaleString("en-IN")}<br><strong>Delivery area:</strong> ${order.zone === "inside" ? "Kathmandu Valley" : "Outside Kathmandu Valley"}<br><strong>Customer:</strong> ${safe.name}<br><strong>Phone:</strong> ${safe.phone}<br><strong>Email:</strong> ${safe.email}<br><strong>Address:</strong> ${safe.address}<br><strong>Note:</strong> ${safe.note || "—"}</p>`;
   const textDetails = `Order: ${order.orderId}\nProduct: Cordless Handheld Vacuum Cleaner × ${order.quantity}\nSubtotal: NPR ${order.subtotal}\nDelivery: NPR ${order.delivery}\nTotal due on delivery: NPR ${order.total}\nDelivery area: ${order.zone === "inside" ? "Kathmandu Valley" : "Outside Kathmandu Valley"}\nCustomer: ${order.name}\nPhone: ${order.phone}\nEmail: ${order.email}\nAddress: ${address}\nNote: ${order.note || "—"}`;
   await Promise.all([
-    transporter.sendMail({ from, to: process.env.ORDER_NOTIFICATION_EMAIL, subject: `New COD order ${order.orderId} · NPR ${order.total}`, text: textDetails, html: `<h2>New Cash on Delivery order</h2>${htmlDetails}` }),
-    transporter.sendMail({ from, to: order.email, replyTo: process.env.ORDER_FROM_EMAIL, subject: `Order received · ${brand}`, text: `Hi ${order.name},\n\nWe received your Cash on Delivery order.\n\n${textDetails}\n\nPlease keep the total ready for the courier. Thank you for shopping with ${brand}.`, html: `<h2>We received your order, ${safe.name}!</h2><p>Thank you for shopping with ${safe.brand}. Your Cash on Delivery order is confirmed.</p>${htmlDetails}<p>Please keep the total ready for the courier. Our team may contact you to confirm delivery details.</p>` }),
+    transporter.sendMail({ from, to: notificationEmail, subject: `New COD order ${order.orderId} · NPR ${order.total}`, text: textDetails, html: `<h2>New Cash on Delivery order</h2>${htmlDetails}` }),
+    transporter.sendMail({ from, to: order.email, replyTo: fromEmail, subject: `Order received · ${brand}`, text: `Hi ${order.name},\n\nWe received your Cash on Delivery order.\n\n${textDetails}\n\nPlease keep the total ready for the courier. Thank you for shopping with ${brand}.`, html: `<h2>We received your order, ${safe.name}!</h2><p>Thank you for shopping with ${safe.brand}. Your Cash on Delivery order is confirmed.</p>${htmlDetails}<p>Please keep the total ready for the courier. Our team may contact you to confirm delivery details.</p>` }),
   ]);
 }
 
